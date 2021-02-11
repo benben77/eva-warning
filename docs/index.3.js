@@ -78,21 +78,22 @@
       canvas2.style.display = 'none';
       
       gif.on('finished', function(blob) {
-        downloadImg(URL.createObjectURL(blob));
+        downloadImg(URL.createObjectURL(blob), 'gif');
         mask.style.display = 'none';
       });
       
       gif.render();
     } else {
-      downloadImg(canvas.toDataURL("image/png"));
+      downloadImg(canvas.toDataURL("image/png"), 'png');
     }
   }
 
-  function downloadImg(src) {
+  function downloadImg(src, type) {
     // TODO: 换成iframe下载
+    // 微信gif不能下是不是因为createObjectURL比toDataURL少了些信息？
     const el = document.createElement('a');
     el.href = src;
-    el.download = 'WARNING';
+    el.download = `WARNING.${type}`;
     document.body.appendChild(el);
     const evt = document.createEvent('MouseEvents');
     evt.initEvent('click', false, false);
