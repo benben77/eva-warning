@@ -79,9 +79,8 @@
       canvas2.style.display = 'none';
       
       gif.on('finished', function(blob) {
-        // img.src = URL.createObjectURL(blob);
-        // document.body.appendChild(img);
-        window.open(URL.createObjectURL(blob));
+        img.src = URL.createObjectURL(blob);
+        document.body.appendChild(img);
         mask.style.display = 'none';
       });
       
