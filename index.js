@@ -16,9 +16,12 @@
   const height = 400;
 
   const drawBtn = document.querySelector('#drawBtn');
+  const downloadBtn = document.querySelector('#downloadBtn');
   const radios = document.querySelectorAll('.imgType');
   const canvas = document.querySelector('#canvas');
-  const ctx = canvas.getContext('2d');
+  const context = canvas.getContext('2d');
+  const canvas2 = document.querySelector('#canvas2');
+  const context2 = canvas2.getContext('2d');
 
   let mainText = document.querySelector('#titleInput').value;
 
@@ -36,43 +39,90 @@
     radio.addEventListener('change', e => {
       const { currentTarget } = e;
       if (!currentTarget.checked) return;
-      isPlaying = currentTarget.dataset.value === 'gif';
-      draw();
+      if (currentTarget.dataset.value === 'gif') {
+        radios[0].parentNode.classList.remove('active');
+        radios[1].parentNode.classList.add('active');
+        isPlaying = true;
+      } else {
+        radios[0].parentNode.classList.add('active');
+        radios[1].parentNode.classList.remove('active');
+        isPlaying = false;
+      }
+      nextFrame();
     });
   });
+  downloadBtn.addEventListener('click', generateImage);
 
   nextFrame();
 
+  function generateImage() {
+    let img = document.querySelector('#image');
+    if (img) img.remove();
+    img = new Image();
+    img.id = 'image';
+    if (isPlaying) {
+      const mask = document.querySelector('#mask');
+      mask.style.display = 'block';
+      
+      const gif = new GIF({
+        repeat: 0,
+        workers: 2,
+        quality: 8
+      });
+
+      const step = 50;
+      for (let x = 0; x <= 1000; x += step) {
+        draw(context2, startTime + x);
+        const imageData = context2.getImageData(0, 0, width, height);
+        gif.addFrame(imageData, { delay: step });
+      }
+      canvas2.style.display = 'none';
+      
+      gif.on('finished', function(blob) {
+        img.src = URL.createObjectURL(blob);
+        document.body.appendChild(img);
+        mask.style.display = 'none';
+      });
+      
+      gif.render();
+    } else {
+      img.src = canvas.toDataURL("image/png");
+      document.body.appendChild(img);
+    }
+  }
+
   function nextFrame() {
     if (startTime === 0) startTime = + new Date;
-    requestAnimationFrame(draw);
+    requestAnimationFrame(() => {
+      draw();
+      if (isPlaying) nextFrame();
+    });
   }
 
-  function draw() {
-    const now = isPlaying ? +new Date : 0;
-    drawBg(now);
-    drawText1();
-    drawText2();
-    drawText3(now);
-    drawLine1();
-    drawMainText(mainText, now);
-    drawLine2();
-    drawText4(now);
-    drawText5();
-
-    if (isPlaying) nextFrame();
+  function draw(ctx = null, now = null, ) {
+    ctx = ctx || context;
+    if (now === null) now = isPlaying ? +new Date : 0;
+    drawBg(ctx, now);
+    drawText1(ctx);
+    drawText2(ctx);
+    drawText3(ctx, now);
+    drawLine1(ctx);
+    drawMainText(ctx, mainText, now);
+    drawLine2(ctx);
+    drawText4(ctx, now);
+    drawText5(ctx);
   }
-  function drawBg(now) {
+  function drawBg(ctx, now) {
     ctx.fillStyle = colors.black;
     ctx.fillRect(0, 0, width, height);
 
     const stripeOffset = 20;
-    const stripeWidth = 100;
-    const stripeGapWidthWidth = 150;
+    const stripeWidth = 60;
+    const stripeGapWidthWidth = 100;
     const startX = ((now - startTime) / 6) % stripeGapWidthWidth - stripeGapWidthWidth;
     ctx.fillStyle = colors.red;
     for (let x = startX; x < width + stripeWidth; x += stripeGapWidthWidth) {
-      drawStripe(x, 5, height, stripeWidth, stripeOffset);
+      drawStripe(ctx, x, 5, height, stripeWidth, stripeOffset);
     }
 
     ctx.fillStyle = colors.black;
@@ -82,42 +132,42 @@
     ctx.fillRect(250, 25, 410, 80);
     ctx.fillRect(0, 330, 380, 60);
   }
-  function drawText1() {
-    fillRoundRect(5, 7, 240, 38, 4, colors.red);
-    fillText('非常事態', 5, 12, 240, 32, colors.black);
+  function drawText1(ctx) {
+    fillRoundRect(ctx, 5, 7, 240, 38, 4, colors.red);
+    fillText(ctx, '非常事態', 5, 12, 240, 32, colors.black);
   }
-  function drawText2() {
-    fillText('警告', 5, 55, 240, 80, colors.red);
+  function drawText2(ctx) {
+    fillText(ctx, '警告', 5, 55, 240, 80, colors.red);
   }
-  function drawText3(now) {
+  function drawText3(ctx, now) {
     const opacity = Math.abs(100 - (now - startTime) / 5 % 200) / 100;
-    fillText2('WARNING', 260, 40, 60, colors.orangeA(opacity));
+    fillText2(ctx, 'WARNING', 260, 40, 60, colors.orangeA(opacity));
   }
-  function drawLine1() {
+  function drawLine1(ctx) {
     ctx.fillStyle = colors.red;
     ctx.fillRect(0, 130, width, 10);
   }
-  function drawMainText(mainText, now) {
-    const hasBg = ((now - startTime) / 4 % 200) > 100;
+  function drawMainText(ctx, mainText, now) {
+    const hasBg = ((now - startTime) / 5 % 200) > 100;
     if (hasBg) {
       ctx.fillStyle = colors.red;
       ctx.fillRect(0, 150, width, 140);
     }
-    fillText(mainText, 0, 170, width, 120, hasBg ? colors.black : colors.red);
+    fillText(ctx, mainText, 0, 170, width, 120, hasBg ? colors.black : colors.red);
   }
-  function drawLine2() {
+  function drawLine2(ctx) {
     ctx.fillStyle = colors.red;
     ctx.fillRect(0, 300, width, 10);
   }
-  function drawText4(now) {
+  function drawText4(ctx, now) {
     const opacity = Math.abs(100 - (now - startTime) / 5 % 200) / 100;
-    fillText2('EMERGENCY', 10, 337, 56, colors.orangeA(opacity));
+    fillText2(ctx, 'EMERGENCY', 10, 337, 56, colors.orangeA(opacity));
   }
-  function drawText5() {
-    fillText('発令', 380, 320, 184, 80, colors.red);
+  function drawText5(ctx) {
+    fillText(ctx, '発令', 380, 320, 184, 80, colors.red);
   }
   
-  function drawStripe(x, y, height, width, offsetX) {
+  function drawStripe(ctx, x, y, height, width, offsetX) {
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(x - width - offsetX, y + height);
@@ -126,7 +176,7 @@
     ctx.closePath();
     ctx.fill();
   }
-  function fillText(text, start, y, width, fs, fillColor) {
+  function fillText(ctx, text, start, y, width, fs, fillColor) {
     ctx.fillStyle = fillColor;
     ctx.font = `bold ${fs}px Arial`;
     ctx.textAlign = 'center';
@@ -137,23 +187,23 @@
       ctx.fillText(t, start + (i + 0.5) * step, y);
     });
   }
-  function fillText2(text, x, y, fs, fillColor) {
+  function fillText2(ctx, text, x, y, fs, fillColor) {
     ctx.fillStyle = fillColor;
     ctx.font = `bold ${fs}px Arial`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.fillText(text, x, y);
   }
-  function fillRoundRect(x, y, width, height, radius, fillColor) {
+  function fillRoundRect(ctx, x, y, width, height, radius, fillColor) {
     if (2 * radius > width || 2 * radius > height) { return false; }
     ctx.save();
     ctx.translate(x, y);
-    drawRoundRectPath(width, height, radius);
+    drawRoundRectPath(ctx, width, height, radius);
     ctx.fillStyle = fillColor;
     ctx.fill();
     ctx.restore();
   }
-  function drawRoundRectPath(width, height, radius) {
+  function drawRoundRectPath(ctx, width, height, radius) {
     ctx.beginPath(0);
     //从右下角顺时针绘制，弧度从0到1/2PI  
     ctx.arc(width - radius, height - radius, radius, 0, Math.PI / 2);
