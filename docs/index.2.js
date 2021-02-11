@@ -79,6 +79,7 @@
       
       gif.on('finished', function(blob) {
         downloadImg(URL.createObjectURL(blob));
+        mask.style.display = 'none';
       });
       
       gif.render();
