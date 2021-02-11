@@ -60,17 +60,21 @@
     if (img) img.remove();
     img = new Image();
     img.id = 'image';
+    img.width = 560;
     if (isPlaying) {
       const mask = document.querySelector('#mask');
       mask.style.display = 'block';
       
+      // TODO: 支持按比例绘制，缩减生成的图片尺寸
       const gif = new GIF({
         repeat: 0,
         workers: 2,
-        quality: 8
+        quality: 6,
+        // width: 280,
+        // height: 200,
       });
 
-      const step = 50;
+      const step = 100;
       for (let x = 0; x <= 1000; x += step) {
         draw(context2, startTime + x);
         const imageData = context2.getImageData(0, 0, width, height);
