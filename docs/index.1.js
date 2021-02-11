@@ -56,11 +56,6 @@
   nextFrame();
 
   function generateImage() {
-    let img = document.querySelector('#image');
-    if (img) img.remove();
-    img = new Image();
-    img.id = 'image';
-    img.width = 560;
     if (isPlaying) {
       const mask = document.querySelector('#mask');
       mask.style.display = 'block';
@@ -83,16 +78,25 @@
       canvas2.style.display = 'none';
       
       gif.on('finished', function(blob) {
-        img.src = URL.createObjectURL(blob);
-        document.body.appendChild(img);
-        mask.style.display = 'none';
+        downloadImg(URL.createObjectURL(blob));
       });
       
       gif.render();
     } else {
-      img.src = canvas.toDataURL("image/png");
-      document.body.appendChild(img);
+      downloadImg(canvas.toDataURL("image/png"));
     }
+  }
+
+  function downloadImg(src) {
+    // TODO: 换成iframe下载
+    const el = document.createElement('a');
+    el.href = src;
+    el.download = 'WARNING';
+    document.body.appendChild(el);
+    const evt = document.createEvent('MouseEvents');
+    evt.initEvent('click', false, false);
+    el.dispatchEvent(evt);
+    document.body.removeChild(el);
   }
 
   function nextFrame() {
