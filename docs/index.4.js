@@ -84,13 +84,18 @@
       
       gif.render();
     } else {
-      downloadImg(canvas.toDataURL("image/png"), 'png');
+      let img = document.querySelector('#image');
+      if (img) img.remove();
+      img = new Image();
+      img.id = 'image';
+      img.src = canvas.toDataURL("image/png");
+      document.body.appendChild(img);
     }
   }
 
   function downloadImg(src, type) {
     // TODO: 换成iframe下载
-    // 微信gif不能下是不是因为createObjectURL比toDataURL少了些信息？
+    // createObjectURL和toDataURL的区别？为啥不能下载
     const el = document.createElement('a');
     el.href = src;
     el.download = `WARNING.${type}`;
