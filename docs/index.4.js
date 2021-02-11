@@ -75,7 +75,6 @@
         const imageData = context2.getImageData(0, 0, width, height);
         gif.addFrame(imageData, { delay: step });
       }
-      canvas2.style.display = 'none';
       
       gif.on('finished', function(blob) {
         downloadImg(URL.createObjectURL(blob), 'gif');
